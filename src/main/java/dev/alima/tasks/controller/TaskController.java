@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -25,9 +26,21 @@ public class TaskController {
         return ResponseEntity.ok(taskService.findAll());
     }
 
+    @Operation(summary = "Get tasks list by id")
+    @GetMapping(path = "/{id}")
+    public ResponseEntity<TaskResponse> getTaskId(@PathVariable Long id) {
+        return ResponseEntity.ok(taskService.findById(id));
+    }
+
+    @Operation(summary = "Get tasks list by title")
+    @GetMapping(path = "/find")
+    public ResponseEntity<List<TaskResponse>> getTaskTitle(@RequestParam(required = false) String title) {
+        return ResponseEntity.ok(taskService.findByTitle(title));
+    }
+
     @Operation(summary = "Post task")
     @PostMapping(consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> save(@RequestBody TaskCommand taskCommand) {
+    public ResponseEntity<String> save(@RequestBody @Valid TaskCommand taskCommand) {
         taskService.save(taskCommand);
         return ResponseEntity.ok().build();
     }
@@ -39,9 +52,9 @@ public class TaskController {
         return ResponseEntity.ok().build();
     }
 
-    @Operation(summary = "Update task title")
+    @Operation(summary = "Update task")
     @PatchMapping
-    public ResponseEntity<String> update(@RequestBody UpdateTaskCommand updateTaskCommand){
+    public ResponseEntity<String> update(@RequestBody @Valid UpdateTaskCommand updateTaskCommand){
         taskService.update(updateTaskCommand);
         return ResponseEntity.ok().build();
     }

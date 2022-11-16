@@ -5,13 +5,13 @@ import dev.alima.tasks.domain.dto.command.UpdateTaskCommand;
 import dev.alima.tasks.domain.dto.response.TaskResponse;
 import dev.alima.tasks.domain.entity.TaskEntity;
 import dev.alima.tasks.domain.mapper.TaskMapper;
+import dev.alima.tasks.exception.BadRequestException;
 import dev.alima.tasks.repository.TaskRepository;
 import dev.alima.tasks.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -22,33 +22,47 @@ public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
     private final TaskMapper taskMapper;
 
+    @Override
     public List<TaskResponse> findAll() {
-        return taskMapper.taskEntityToTaskResponse(taskRepository.findAll());
+        return taskRepository.findAll().stream().map(taskMapper::taskEntityToTaskResponse).toList();
     }
 
     @Override
+    public TaskResponse findById(Long id) {
+        return taskMapper.taskEntityToTaskResponse(findByIdOrThrowsBadRequestException(id));
+    }
+
+    @Override
+    public List<TaskResponse> findByTitle(String title) {
+        return taskRepository.findByTitle(title).stream().map(taskMapper::taskEntityToTaskResponse).toList();
+    }
+
+    @Override
+    @Transactional
     public void save(TaskCommand taskCommand) {
         try {
             taskRepository.save(taskMapper.taskCommandToTaskEntity(taskCommand));
         } catch (Exception e) {
-            log.error("Error {}", taskCommand.getTitle());
+            new BadRequestException("Error to save Task");
         }
     }
 
     private TaskEntity findByIdOrThrowsBadRequestException(Long id) {
         return taskRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Task not found"));
+                .orElseThrow(() -> new BadRequestException("Task not found"));
     }
 
     @Override
+    @Transactional
     public void delete(long id) {
         taskRepository.deleteById(findByIdOrThrowsBadRequestException(id).getId());
     }
 
     @Override
+    @Transactional
     public void update(UpdateTaskCommand updateTaskCommand) {
-            TaskEntity taskById = findByIdOrThrowsBadRequestException(updateTaskCommand.getId());
-            taskRepository.save(taskMapper.updateTaskCommandToTaskEntity(updateTaskCommand, taskById));
+        TaskEntity taskById = findByIdOrThrowsBadRequestException(updateTaskCommand.getId());
+        taskRepository.save(taskMapper.updateTaskCommandToTaskEntity(updateTaskCommand, taskById));
     }
 
 }

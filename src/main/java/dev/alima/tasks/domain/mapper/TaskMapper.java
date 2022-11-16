@@ -7,19 +7,15 @@ import dev.alima.tasks.domain.entity.TaskEntity;
 import dev.alima.tasks.domain.values.Status;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Component
 public class TaskMapper {
-    public List<TaskResponse> taskEntityToTaskResponse(final List<TaskEntity> tasks) {
-        return tasks.stream()
-                .map(task -> TaskResponse.builder()
-                        .id(task.getId())
-                        .title(task.getTitle())
-                        .subtitle(task.getSubtitle())
-                        .status(task.getStatus())
-                        .build())
-                .toList();
+    public TaskResponse taskEntityToTaskResponse(final TaskEntity tasks) {
+        return TaskResponse.builder()
+                .id(tasks.getId())
+                .title(tasks.getTitle())
+                .subtitle(tasks.getSubtitle())
+                .status(tasks.getStatus())
+                .build();
     }
 
     public TaskEntity taskCommandToTaskEntity(final TaskCommand taskCommand) {
